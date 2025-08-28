@@ -21,11 +21,12 @@ export default function SellPage() {
   ]);
   const [customerName, setCustomerName] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const router = useRouter();
 
   const handleFetchPrescription = async () => {
     if (!prescriptionId) {
-      alert("Please enter Prescription ID first.");
+      setErrorMessage("Please enter Prescription ID first.");
       return;
     }
     setLoading(true);
@@ -37,7 +38,7 @@ export default function SellPage() {
       );
       const data = await response.json();
       if (!data.success) {
-        alert("Prescription not found.");
+  setErrorMessage("Prescription not found.");
         setInvoiceDate("");
         setInvoiceItems([{ qty: "1", name: "", price: "0", discount: "0" }]);
         setCustomerName("");
@@ -102,7 +103,7 @@ export default function SellPage() {
       }
     } catch (error) {
       console.error("Error fetching prescription:", error);
-      alert("Error fetching prescription data.");
+  setErrorMessage("Error fetching prescription data.");
       setInvoiceDate("");
       setInvoiceItems([{ qty: "1", name: "", price: "0", discount: "0" }]);
       setCustomerName("");
@@ -126,6 +127,19 @@ export default function SellPage() {
   };
 
   const handleFinalize = async () => {
+    // Validation: check for empty fields
+    if (
+      !customerName.trim() ||
+      !phoneNumber.trim() ||
+      !invoiceDate.trim() ||
+      invoiceItems.length === 0 ||
+      invoiceItems.some(
+        (item) => !item.name.trim() || !item.qty.trim() || !item.price.trim()
+      )
+    ) {
+      setErrorMessage("Please fill in all required fields: Name, Phone, Date, and at least one medicine with all details.");
+      return;
+    }
     // Calculate totals
     const { subTotal, tax, total } = calculateTotals(invoiceItems);
     // Prepare billItems
@@ -159,7 +173,7 @@ export default function SellPage() {
       if (!res.ok) {
         const errorText = await res.text();
         console.error("Failed to create bill:", res.status, errorText);
-        alert(
+        setErrorMessage(
           "Failed to finalize and lock bill. Server responded: " + errorText
         );
         return;
@@ -180,7 +194,7 @@ export default function SellPage() {
       router.push("/pharmacist/Sell/Finalize");
     } catch (err) {
       console.error("Error during bill POST:", err);
-      alert(
+      setErrorMessage(
         "Failed to finalize and lock bill. " +
           (err instanceof Error ? err.message : "")
       );
@@ -243,6 +257,20 @@ export default function SellPage() {
             </div>
           </section>
 
+          {errorMessage && (
+            <div className="flex justify-center mb-4">
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-lg text-center max-w-xl w-full">
+                {errorMessage}
+                <button
+                  className="ml-4 text-red-500 hover:underline font-bold"
+                  onClick={() => setErrorMessage("")}
+                  aria-label="Dismiss error"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )}
           <div className="flex justify-center mb-8">
             <button
               onClick={handleFinalize}

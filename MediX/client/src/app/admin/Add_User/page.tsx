@@ -347,12 +347,48 @@ const resetForm = () => {
   setMessage("");
   setMessageType("");
 
-  // Create doctor if role is "Doctor"
+
   if (role === "Doctor") {
     await createDoctor();
   }
-
-  // If role is "Receptionist", create receptionist
+  // Pharmacist creation logic
+  else if (role === "Pharmacist") {
+    const pharmacistData = {
+      name,
+      email,
+      phoneNumber: phone,
+      password,
+      address,
+    };
+    try {
+      const response = await fetch("http://localhost:8080/api/pharmacists", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(pharmacistData),
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setMessage("Pharmacist created successfully!");
+        setMessageType("success");
+        resetForm();
+        setTimeout(() => {
+          router.push("/admin");
+        }, 4000);
+      } else {
+        const errorData = await response.json();
+        setMessage(
+          "Failed to create pharmacist: " + (errorData.error || "Unknown error")
+        );
+        setMessageType("error");
+      }
+    } catch (error) {
+      setMessage("Network error occurred while creating pharmacist");
+      setMessageType("error");
+    }
+  }
+  // Receptionist creation logic
   else if (role === "Receptionist") {
     const receptionistData = {
       name,

@@ -47,6 +47,39 @@ export default function SignIn() {
         return;
       }
 
+
+      // Pharmacist login (check before receptionist)
+      const resPharmacist = await fetch(
+        "http://localhost:8080/api/pharmacists/by-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email.trim(),
+            password: password.trim(),
+          }),
+        }
+      );
+      if (resPharmacist.ok) {
+        const pharmacistResponse = await resPharmacist.json();
+        if (pharmacistResponse.success) {
+          // Store pharmacist data in localStorage
+          const pharmacistData = pharmacistResponse.data;
+          localStorage.setItem("pharmacistId", pharmacistData.id.toString());
+          localStorage.setItem("pharmacistName", pharmacistData.name);
+          localStorage.setItem("pharmacistEmail", pharmacistData.email);
+          localStorage.setItem("pharmacistPhoneNumber", pharmacistData.phoneNumber);
+          localStorage.setItem("pharmacistPassword", pharmacistData.password);
+          localStorage.setItem("pharmacistAddress", pharmacistData.address);
+          localStorage.setItem("pharmacistData", JSON.stringify(pharmacistData));
+          router.push(`/pharmacist?email=${encodeURIComponent(email)}`);
+          return;
+        }
+      }
+
+      // Receptionist login
       const resReception = await fetch(
         "http://localhost:8080/api/receptionists/by-email",
         {

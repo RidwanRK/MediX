@@ -101,7 +101,7 @@ export default function Invoice({ date: propDate, setDate, items: propItems, set
     if (setItems) setItems(updated);
     else localSetItems(updated);
 
-    // Autocomplete: update suggestions for name field
+    // Autocomplete: update suggestions for name field (case-insensitive)
     if (field === "name") {
       const input = value.trim().toLowerCase();
       if (input.length > 0) {
@@ -129,10 +129,12 @@ export default function Invoice({ date: propDate, setDate, items: propItems, set
 
   // When user selects a suggestion
   const handleSelectSuggestion = async (rowIdx: number, name: string) => {
+    // Find the actual medicine name from the list (case-insensitive match)
+    const actualName = medicineNames.find((n) => n.toLowerCase() === name.toLowerCase()) || name;
     // Fetch unit price and update both name and price
-    const price = await fetchUnitPrice(name);
+    const price = await fetchUnitPrice(actualName);
     const updated = [...items];
-    updated[rowIdx] = { ...updated[rowIdx], name, price };
+    updated[rowIdx] = { ...updated[rowIdx], name: actualName, price };
     if (setItems) setItems(updated);
     else localSetItems(updated);
     setShowSuggestions((prev) => ({ ...prev, [rowIdx]: false }));
@@ -331,7 +333,7 @@ export default function Invoice({ date: propDate, setDate, items: propItems, set
                   )}
                 </div>
                 {/* Only allow selection from available medicine names */}
-                {item.name && !medicineNames.includes(item.name) && (
+                {item.name && !medicineNames.some((n) => n.toLowerCase() === item.name.toLowerCase()) && (
                   <div className="text-xs text-red-600">Please select a valid medicine name.</div>
                 )}
               </td>
@@ -347,6 +349,18 @@ export default function Invoice({ date: propDate, setDate, items: propItems, set
                     inputRefs.current[idx][2] = el;
                   }}
                   onKeyDown={e => handleKeyDown(idx, 2, e)}
+                  onFocus={async () => {
+                    // When price field is focused, fetch price if name is valid (case-insensitive)
+                    const name = item.name;
+                    if (!name) return;
+                    const actualName = medicineNames.find((n) => n.toLowerCase() === name.toLowerCase());
+                    if (actualName) {
+                      const price = await fetchUnitPrice(actualName);
+                      if (price !== item.price) {
+                        handleItemChange(idx, "price", price);
+                      }
+                    }
+                  }}
                 />
               </td>
               <td className="p-2 border">
