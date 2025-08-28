@@ -378,7 +378,7 @@ export default function Invoice({ date: propDate, setDate, items: propItems, set
                 />
               </td>
               <td className="p-2 border font-semibold text-right pr-4 flex items-center justify-between">
-                <span>${((item.qty === "" ? 0 : Number(item.qty)) * (item.price === "" ? 0 : Number(item.price)) - (item.discount === "" ? 0 : Number(item.discount)) * Number(item.qty)).toFixed(2)}</span>
+                <span>৳{((item.qty === "" ? 0 : Number(item.qty)) * (item.price === "" ? 0 : Number(item.price)) - (item.discount === "" ? 0 : Number(item.discount)) * Number(item.qty)).toFixed(2)}</span>
                 <button onClick={() => handleRemoveItem(idx)} title="Remove item" className="ml-2 text-red-600 hover:text-red-800 text-lg font-bold" style={{ lineHeight: 1 }}>
                   &times;
                 </button>
